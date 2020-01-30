@@ -1,0 +1,26 @@
+create table SignIn
+(signin_id number(4) primary key,
+signin_login varchar2(100),
+signin_password varchar2(100),
+signin_time date);
+
+create table WrongSignInHistory
+(wrong_signin_history_id number(4) primary key,
+signin_id number(4),
+wrong_signin_history_time date,
+constraint wrong foreign key(signin_id)
+references SignIn(signin_id));
+
+create table SignInHistory
+(signin_history_id number(4) primary key,
+signin_id number(4),
+signin_history_time date,
+constraint signin foreign key(signin_id)
+references SignIn(signin_id));
+
+create table PasswordHistory
+(password_history_id number(4) primary key,
+signin_id number(4),
+password_history_time date,
+constraint passwordhis foreign key(signin_id)
+references SignIn(signin_id));
