@@ -1,6 +1,7 @@
 package pl.login;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 import javax.servlet.RequestDispatcher;
@@ -54,6 +55,17 @@ public class ChangePassword_Servlet extends HttpServlet {
 			if(!pattern.matcher(password).matches()) {
 				url = "/changepassword.jsp";
 				request.setAttribute("changepassword_message", "Podane has³o nie spe³nia warunków");
+			}
+			else {
+				try {
+					if(!new Database().changePassword(login, password)) {
+						url = "/changepassword.jsp";
+						request.setAttribute("changepassword_message", "U¿ytkownik nie istnieje lub podane has³o zosta³o wczeœniej u¿yte");
+					}
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		ServletContext context = getServletContext();

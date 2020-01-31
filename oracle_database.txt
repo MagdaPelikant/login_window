@@ -21,6 +21,76 @@ references SignIn(signin_id));
 create table PasswordHistory
 (password_history_id number(4) primary key,
 signin_id number(4),
+password_history_value varchar2(100),
 password_history_time date,
 constraint passwordhis foreign key(signin_id)
 references SignIn(signin_id));
+
+CREATE SEQUENCE seq_signin
+INCREMENT BY 1 
+START WITH 1 
+MAXVALUE 999 
+MINVALUE 1;
+
+CREATE SEQUENCE seq_passwordhistory
+INCREMENT BY 1 
+START WITH 1 
+MAXVALUE 999 
+MINVALUE 1;
+
+create or replace package p_signin
+is
+    procedure checkIFUserExist(login varchar2, userid out int);
+    procedure signup(login varchar2, password varchar2);
+    procedure savePassswordHistory(login varchar2, password varchar2);
+    procedure checkIfUserPasswordExist(login varchar2, password varchar2, ispassword out int);
+    procedure changePassword(login varchar2, password varchar2);
+end;
+
+create or replace package body p_signin
+is
+    procedure checkIFUserExist(login varchar2, userid out int)
+    as
+    begin
+       select count(signin_id) into userid from signin where signin_login = login;
+    end;
+    
+    procedure signup(login varchar2, password varchar2)
+    as
+        expired date;
+    begin
+        select sysdate + (1/1440*3) into expired from dual;
+        insert into signin values(seq_signin.nextval, login, password, expired);
+        commit;
+    end;
+    
+    procedure savePassswordHistory(login varchar2, password varchar2)
+    as
+        userid int;
+        now_date date;
+    begin
+        select signin_id into userid from signin where signin_login=login and signin_password=password;
+        select sysdate into now_date from dual;
+        insert into passwordhistory values(seq_passwordhistory.nextval, userid, password, now_date);
+        commit;
+    end;
+    
+    procedure checkIfUserPasswordExist(login varchar2, password varchar2, ispassword out int)
+    as
+        userid int;
+    begin
+        select signin_id into userid from signin where signin_login = login;
+        select count(password_history_id) into ispassword from passwordhistory 
+        where signin_id=userid and password_history_value=password;
+    end;
+    
+    procedure changePassword(login varchar2, password varchar2)
+    as
+        userid int;
+        expired date;
+    begin
+        select signin_id into userid from signin where signin_login=login;
+        select sysdate + (1/1440*3) into expired from dual;
+        update signin set signin_password=password, signin_time=expired where signin_id=userid;
+    end;
+end;

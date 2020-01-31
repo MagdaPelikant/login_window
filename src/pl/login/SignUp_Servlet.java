@@ -1,6 +1,7 @@
 package pl.login;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 import javax.servlet.RequestDispatcher;
@@ -54,6 +55,17 @@ public class SignUp_Servlet extends HttpServlet {
 			if(!pattern.matcher(password).matches()) {
 				url = "/signup.jsp";
 				request.setAttribute("signup_message", "Podane has³o nie spe³nia warunków");
+			}
+			else {
+				try {
+					if(!new Database().signup(login, password)) {
+						url = "/signup.jsp";
+						request.setAttribute("signup_message", "Istnieje taki u¿ytkownik");
+					}
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		ServletContext context = getServletContext();
