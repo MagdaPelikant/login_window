@@ -16,6 +16,20 @@
       <version>3.1.0</version>
       <scope>provided</scope>
 	</dependency>
+	<dependency>
+		<groupId>com.oracle</groupId>
+		<artifactId>ojdbc</artifactId>
+		<version>8</version>
+		<scope>system</scope>
+		<systemPath>${project.basedir}/WebContent/WEB-INF/lib/ojdbc8.jar</systemPath>
+	</dependency>
+	<dependency>
+      <groupId>jstl</groupId>
+      <artifactId>jstl</artifactId>
+      <version>1.2</version>
+      <scope>system</scope>
+	  <systemPath>${project.basedir}/WebContent/WEB-INF/lib/jstl-1.2.jar</systemPath>
+	</dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>

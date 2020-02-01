@@ -1,6 +1,7 @@
 package pl.login;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -44,8 +45,32 @@ public class SignIn_Servlet extends HttpServlet {
 		String url = "/main.jsp";
 		String login = request.getParameter("login");
 		String password = request.getParameter("password");
-		request.setAttribute("loginout", login);
-		request.setAttribute("passwordout", password);
+		if (login == null || login.length() == 0 || password == null || password.length() == 0) {
+			url = "/login.jsp";
+			request.setAttribute("signin_message", "Podany login/has³o nie mo¿e byæ pusty");
+		}
+		else {
+			try {
+				if(new Database().signin(login, password) > 0) {
+					if(new Database().isExpired(login, password) > 0) {
+						request.setAttribute("loginout", login);
+						request.setAttribute("loghistory", new Database().getLogHistory(login));
+						request.setAttribute("wrongloghistory", new Database().getWrongLogHistory(login));
+					}
+					else {
+						url = "/login.jsp";
+						request.setAttribute("signin_message", "Has³o straci³o okres wa¿noœci");
+					}
+				}
+				else {
+					url = "/login.jsp";
+					request.setAttribute("signin_message", "Podany login/has³o jest nieprawid³owe");
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		ServletContext context = getServletContext();
 		RequestDispatcher dispatcher = context.getRequestDispatcher(url);
 		dispatcher.forward(request, response);

@@ -38,6 +38,18 @@ START WITH 1
 MAXVALUE 999 
 MINVALUE 1;
 
+CREATE SEQUENCE seq_signinhistory
+INCREMENT BY 1 
+START WITH 1 
+MAXVALUE 999 
+MINVALUE 1;
+
+CREATE SEQUENCE seq_wrongsigninhistory
+INCREMENT BY 1 
+START WITH 1 
+MAXVALUE 999 
+MINVALUE 1;
+
 create or replace package p_signin
 is
     procedure checkIFUserExist(login varchar2, userid out int);
@@ -45,6 +57,12 @@ is
     procedure savePassswordHistory(login varchar2, password varchar2);
     procedure checkIfUserPasswordExist(login varchar2, password varchar2, ispassword out int);
     procedure changePassword(login varchar2, password varchar2);
+    procedure signin(login varchar2, password varchar2, iscorrect out int);
+    procedure isExpired(login varchar2, password varchar2, isexpired out int);
+    procedure saveLogHistory(login varchar2, password varchar2);
+    procedure saveWrongLogHistory(login varchar2);
+    procedure getLogHistory(login varchar2, log_cursor out sys_refcursor);
+    procedure getWrongLogHistory(login varchar2, log_cursor out sys_refcursor);
 end;
 
 create or replace package body p_signin
@@ -92,5 +110,70 @@ is
         select signin_id into userid from signin where signin_login=login;
         select sysdate + (1/1440*3) into expired from dual;
         update signin set signin_password=password, signin_time=expired where signin_id=userid;
+    end;
+    
+    procedure signin(login varchar2, password varchar2, iscorrect out int)
+    as
+    begin
+        select count(signin_id) into iscorrect from signin 
+        where signin_login=login and signin_password=password;
+    end;
+    
+    procedure isExpired(login varchar2, password varchar2, isexpired out int)
+    as
+        loginpassworddate date;
+    begin
+        select signin_time into loginpassworddate from signin 
+        where signin_login=login and signin_password=password;
+        SELECT 24 * 60 * (loginpassworddate
+        - sysdate)
+        into isexpired
+        FROM Dual;
+    end;
+    
+    procedure saveLogHistory(login varchar2, password varchar2)
+    as
+        userid int;
+        now_date date;
+    begin
+        select signin_id into userid from signin where signin_login=login and signin_password=password;
+        select sysdate into now_date from dual;
+        insert into signinhistory values(seq_signinhistory.nextval, userid, now_date);
+        commit;
+    end;
+    
+    procedure saveWrongLogHistory(login varchar2)
+    as
+        userid int;
+        now_date date;
+    begin
+        select signin_id into userid from signin where signin_login=login;
+        select sysdate into now_date from dual;
+        insert into wrongsigninhistory values(seq_wrongsigninhistory.nextval, userid, now_date);
+        commit;
+    end;
+    
+    procedure getLogHistory(login varchar2, log_cursor out sys_refcursor)
+    as
+        userid int;
+    begin
+        select signin_id into userid from signin where signin_login=login;
+        OPEN log_cursor FOR
+        SELECT signin_history_id, to_char(signin_history_time, 'YY/MM/DD HH:MI:SS') 
+        FROM signinhistory
+        WHERE signin_id=userid
+        order by signin_history_id;
+    end;
+    
+    procedure getWrongLogHistory(login varchar2, log_cursor out sys_refcursor)
+    as
+        userid int;
+    begin
+        select signin_id into userid from signin where signin_login=login;
+        OPEN log_cursor FOR
+        SELECT wrong_signin_history_id, to_char(wrong_signin_history_time, 'YY/MM/DD HH:MI:SS') 
+        FROM wrongsigninhistory
+        WHERE signin_id=userid
+        order by wrong_signin_history_id;
     end;
 end;

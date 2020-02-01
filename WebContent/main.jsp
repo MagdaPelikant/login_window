@@ -19,13 +19,24 @@
 //Object passwordout = request.getAttribute("passwordout");
 //out.print(passwordout.toString());
 </jsp:scriptlet>
-	<c:set var="loginvar" value="adsds"></c:set>
-	${loginout}
-	<c:out value="${loginvar}"></c:out>
+	<c:set var="loginvar" value=""></c:set>
+	 Hello ${loginout}
 <hr>
-	<c:set var="passwordvar" value="adsds"></c:set>
-	${passwordout}
-	<c:out value="${passwordvar}"></c:out>
+	Log History
+	<br>
+	<c:forEach var="log" items="${loghistory}">
+  	<br/>
+  	<c:out value="${log.id}" />
+  	<c:out value="${log.date}" />
+	</c:forEach>
+<hr>
+	Wrong Log History
+	<br>
+	<c:forEach var="wronglog" items="${wrongloghistory}">
+  	<br/>
+  	<c:out value="${wronglog.id}" />
+  	<c:out value="${wronglog.date}" />
+	</c:forEach>
 <hr>
 <form action="login.jsp">
 <input type="submit" value="Log out">
